@@ -124,7 +124,7 @@ const initialConfig = await adapter.fetchConfigFile();
 
 #### **Description**
 
-An asynchronous method used to manually retrieve configuration. Can be called even when `pollInterval` is set. Use this method to await retrieval of initial configurations upon app startup.
+An asynchronous method used to manually retrieve configuration. This method must be called to kick-start automatic configuration retrieval. Can be called even when `pollInterval` is set. Use this method to await retrieval of initial configurations upon app startup.
 
 This method does not allows for arguments to be passed. If for some reason multiple repositories need to be accessed (i.e. a base configuration and then environmental configurations -- not at all recommended, but a possibility: in general it is best to keep a unified set of configurations per environment), you should use multiple `ServiceAdapter` instances, and handle responses accordingly in your application.
 

@@ -12,6 +12,7 @@ export default class ServiceAdapter {
 	private readonly internalEmitter: EventEmitter;
 
 	private currentConfig: Record<string, unknown>;
+	private loop: boolean;
 
 	readonly baseUrl: string;
 	readonly emitter: EventEmitter;
@@ -51,6 +52,7 @@ export default class ServiceAdapter {
 		this.username = username;
 		this.token = token;
 		this.verbose = verbose;
+		this.loop = false;
 
 		this.options = {
 			headers: {
@@ -109,6 +111,10 @@ export default class ServiceAdapter {
 			});
 	}
 
+	startLoop() {
+		this.loop = true;
+	}
+
 	async fetchConfigFile() {
 		if (this.local) return this.fetchFromLocal();
 		let res;
@@ -145,7 +151,7 @@ export default class ServiceAdapter {
 			!this.mute && this.message.fetchLocalConfigFileFailure({ e });
 			return;
 		}
-		this.internalEmitter.emit('configReceived', res, this);
+		if (this.loop) this.internalEmitter.emit('configReceived', res, this);
 		return Object.freeze({ ...res });
 	}
 
@@ -157,7 +163,7 @@ export default class ServiceAdapter {
 		} catch (e) {
 			throw e;
 		}
-		this.internalEmitter.emit('configReceived', res, this);
+		if (this.loop) this.internalEmitter.emit('configReceived', res, this);
 		return Object.freeze({ ...res });
 	}
 
@@ -171,7 +177,8 @@ export default class ServiceAdapter {
 		if (current !== proposed) {
 			this.currentConfig = { ...data };
 			if (this.verbose && this.isDev) console.log(data, '\n');
-			this.emitter.emit('configUpdated', Object.freeze({ ...data }));
+			if (this.loop)
+				this.emitter.emit('configUpdated', Object.freeze({ ...data }));
 		}
 		if (this.pollInterval) {
 			this.startPollLoop();

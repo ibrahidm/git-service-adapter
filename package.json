@@ -4,9 +4,14 @@
     "description": "A configurable plug-and-play wrapper around the GitHub v3 API that allows applications to leverage GitHub as a remote configuration storage service.",
     "main": "./lib/cjs/index.js",
     "module": "./lib/esm/index.js",
+    "homepage": "https://github.com/ibrahidm/git-service-adapter/#README",
     "files": [
         "lib/"
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ibrahidm/git-service-adapter.git"
+    },
     "keywords": [
         "github",
         "remote",
