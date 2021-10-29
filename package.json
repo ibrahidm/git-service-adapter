@@ -1,0 +1,39 @@
+{
+    "name": "git-service-adapter",
+    "version": "1.0.0",
+    "description": "A configurable plug-and-play wrapper around the GitHub v3 API that allows applications to leverage GitHub as a remote configuration storage service.",
+    "main": "./lib/cjs/index.js",
+    "module": "./lib/esm/index.js",
+    "files": [
+        "lib/"
+    ],
+    "keywords": [
+        "github",
+        "remote",
+        "remote config",
+        "configuration",
+        "environment",
+        "environment variables",
+        "environment management",
+        "cloud configuration",
+        "adapter",
+        "git"
+    ],
+    "author": "Dr. Daniel M. Ibrahim, PharmD",
+    "license": "MIT",
+    "scripts": {
+        "build": "yarn clean && npx tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
+        "clean": "rm -rf lib",
+        "prepublishOnly": "yarn test",
+        "test": "jest || echo \"No tests specified\""
+    },
+    "devDependencies": {
+        "@types/node": "^16.11.6",
+        "dotenv": "^10.0.0",
+        "typescript": "^4.4.4"
+    },
+    "dependencies": {
+        "axios": "^0.24.0",
+        "chalk": "^4.1.2"
+    }
+}
