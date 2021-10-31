@@ -39,7 +39,7 @@
 
 The intended use of this package is through a service or "bot" user account. It is recommended that this account not be connected to any third-party applications and, of course, that only private repositories be provisioned. A [Personal Access Token]('https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token') is required. The token must have read permissions for repositories, files, and--if you intend to access repositories stored within connected organizations--organizations. It is up to development teams to determine least-privilege principles and manage token-cycling.
 
-> ***Note**: It is up to **you** to determine whether or not **Git Service Adapter** is an appropriate tool for your application. While utilization allows for the separation of environment configurations from your codebase (GOOD), GitHub repositories are not specifically designed with this use-case in mind. With appropriate precautions (such as, but not limited to, those described above), however, it provides a serviceable option to quickly get up-and-running with remote configurations. As a disclaimer, use at your own discretion.*
+> ***Note**: It is up to **you** to determine whether or not **Git Service Adapter** is an appropriate tool for your application. While utilization allows for the separation of environment configurations from your codebase (GOOD), GitHub repositories are not specifically designed with this use-case in mind. With appropriate precautions (such as--but not limited to--those described above), however, it provides a serviceable option to quickly get up-and-running with remote configurations. As a disclaimer, use at your own discretion.*
 
 ## Installation
 
@@ -132,7 +132,7 @@ const initialConfig = await adapter.fetchConfigFile();
 
 ## Initialization 
 
-Upon instantiation, `ServiceAdapter` performs very basic validation, ensuring that the required fields have either been passed as arguments, or are readable from `process.env`. 
+Upon instantiation, `ServiceAdapter` performs very basic validation, ensuring that the required fields have either been passed as arguments or are readable from `process.env`. 
 
 In local development, missing arguments will not result in an error, however a warning message will be displayed. 
 
@@ -212,7 +212,7 @@ Listen to this event to respond to configuration changes within your application
 
 ## Contribute
 
-If you encounter an issues, please open an issue! If you'd like to contribute features or functionality, feel free to submit a pull request. Feature requests also accepted.
+If you encounter any problems, please open an issue! If you would like to contribute features or functionality, feel free to submit a pull request. Feature requests also accepted.
 
 The following items will receive priority:
 * Unit Tests (package has been extensively tested via manual testing)
