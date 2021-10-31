@@ -29,7 +29,7 @@
     "scripts": {
         "build": "yarn clean && npx tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
         "clean": "rm -rf lib",
-        "prepublishOnly": "yarn test",
+        "prepublishOnly": "yarn test && yarn build",
         "test": "jest || echo \"No tests specified\""
     },
     "devDependencies": {
