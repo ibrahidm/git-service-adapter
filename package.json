@@ -1,6 +1,6 @@
 {
     "name": "git-service-adapter",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A configurable plug-and-play wrapper around the GitHub v3 API that allows applications to leverage GitHub as a remote configuration storage service.",
     "main": "./lib/cjs/index.js",
     "module": "./lib/esm/index.js",
