@@ -11,18 +11,27 @@
 - [Set-up](#set-up)
 - [Basic Usage](#basic-usage)
 - [Arguments](#arguments)
+- [Initialization](#initialization)
 - [Methods](#methods)
-  - [`ServiceAdapter.prototype.fetchConfigFile()`](#serviceadapterprototypefetchconfigfile)
+  - [`ServiceAdapter.prototype.establishConnection()`](#serviceadapterprototypeestablishconnection)
     - [**Description**](#description)
     - [**Arguments**](#arguments-1)
     - [**Output**](#output)
-  - [`ServiceAdapter.prototype.printConnection()`](#serviceadapterprototypeprintconnection)
+  - [`ServiceAdapter.prototype.fetchConfigFile()`](#serviceadapterprototypefetchconfigfile)
     - [**Description**](#description-1)
     - [**Arguments**](#arguments-2)
     - [**Output**](#output-1)
+  - [`ServiceAdapter.prototype.printConnection()`](#serviceadapterprototypeprintconnection)
+    - [**Description**](#description-2)
+    - [**Arguments**](#arguments-3)
+    - [**Output**](#output-2)
+  - [`ServiceAdapter.prototype.togglePollLoop()`](#serviceadapterprototypetogglepollloop)
+    - [**Description**](#description-3)
+    - [**Arguments**](#arguments-4)
+    - [**Output**](#output-3)
 - [Events](#events)
   - [`configUpdated`](#configupdated)
-    - [**Description**](#description-2)
+    - [**Description**](#description-4)
 - [Contribute](#contribute)
 - [Support](#support)
 
@@ -78,6 +87,7 @@ const adapter = new ServiceAdapter({
     mute: false,
     local: false,
     verbose: true,
+    timeoutFn: setTimeout
 });
 ```
 
@@ -107,19 +117,42 @@ const initialConfig = await adapter.fetchConfigFile();
 
 ## Arguments
 
-| Name            | Default                                | Description                                                                                                                                                                                                                                                                                    |
-| --------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fileName?`     | `process.env.GIT_FILE`                 | The name of the configuration file in the remote repository. Argument is optional, however a value is required if one cannot be read from `process.env`.                                                                                                                                       |
-| `local?`        | `false`                                | Indicates whether a file should be read from the local environment. A file named `local.json` must be included at the root of the project directory with the required environment variables stored inside. Make sure you `.gitignore` this file!                                               | `mute?` | `false` | Toggles all logs on and off. |
-| `organization?` | `process.env.GIT_ORG`                  | The name of the organization storing the remote repository and configuration file. This argument is truly optional -- if not included, it is assumed that the configs are stored in a repository directly on the service account.                                                              |
-| `pollInterval?` | `undefined`                            | An optional argument used to provide the interval at which **Git Service Adapter** should check the configuration repository. Argument should be provided in milliseconds. If no argument is provided, polling does not occur. If an argument is provided, polling is initiated automatically. |
-| `repository?`   | `process.env.GIT_REPO`                 | The name of the remote repository. Argument is optional, however a value is required if one cannot be read from `process.env`.                                                                                                                                                                 |
-| `token?`        | `process.env.GIT_SERVICE_ACCESS_TOKEN` | The [Personal Access Token]('https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token') of the service account. Argument is optional, however a value is required if one cannot be read from `process.env`.                             |
-| `username?`     | `process.env.GIT_USERNAME`             | The name of the service account. Argument is optional, however a value is required if one cannot be read from `process.env`.                                                                                                                                                                   |
-| `verbose?`      | `false`                                | Toggles whether or not retrieved configurations should be logged to console. This happens independently of `mute`. If `process.env.NODE_ENV` is not explicitly set to `'development'`, this argument will be ignored to prevent accidental secret leakage.                                     |
+| Name            | Default                                          | Description                                                                                                                                                                                                                                                                                                                      |
+| --------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fileName?`     | `process.env.GIT_FILE`                           | The name of the configuration file in the remote repository. Argument is optional, however a value is required if one cannot be read from `process.env`.                                                                                                                                                                         |
+| `local?`        | `false`                                          | Indicates whether a file should be read from the local environment. A file named `local.json` must be included at the root of the project directory with the required environment variables stored inside. Make sure you `.gitignore` this file!                                                                                 | `mute?` | `false` | Toggles all logs on and off. |
+| `organization?` | `process.env.GIT_ORG`                            | The name of the organization storing the remote repository and configuration file. This argument is truly optional -- if not included, it is assumed that the configs are stored in a repository directly on the service account.                                                                                                |
+| `pollInterval?` | `undefined`                                      | An optional argument used to provide the interval at which **Git Service Adapter** should check the configuration repository. Argument should be provided in milliseconds. If no argument is provided, polling does not occur. If an argument is provided, polling is initiated automatically.                                   |
+| `repository?`   | `process.env.GIT_REPO`                           | The name of the remote repository. Argument is optional, however a value is required if one cannot be read from `process.env`.                                                                                                                                                                                                   |
+| `setTimeout?`   | `setTimeout` (default `NodeJs` timeout function) | Optional custom timeout function. Due to historic buggy behaviors of the native `NodeJS` timeout function, users have the option of writing or wrapping a timeout function from another language if necessary. If no `pollInterval` is set, poll-loop will not trigger regardless of whether or not a custom function is passed. |
+| `token?`        | `process.env.GIT_SERVICE_ACCESS_TOKEN`           | The [Personal Access Token]('https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token') of the service account. Argument is optional, however a value is required if one cannot be read from `process.env`.                                                               |
+| `username?`     | `process.env.GIT_USERNAME`                       | The name of the service account. Argument is optional, however a value is required if one cannot be read from `process.env`.                                                                                                                                                                                                     |
+| `verbose?`      | `false`                                          | Toggles whether or not retrieved configurations should be logged to console. This happens independently of `mute`. If `process.env.NODE_ENV` is not explicitly set to `'development'`, this argument will be ignored to prevent accidental secret leakage.                                                                       |
 
+
+## Initialization 
+
+Upon instantiation, `ServiceAdapter` performs very basic validation, ensuring that the required fields have either been passed as arguments, or are readable from `process.env`. 
+
+In local development, missing arguments will not result in an error, however a warning message will be displayed. 
+
+If `process.env.NODE_ENV` is not explicitly set to `'development'`, missing essential arguments will result in a thrown error. This is done to prevent app start-up whenever there is an issue with environment configs. 
 ## Methods
 
+### `ServiceAdapter.prototype.establishConnection()`
+
+#### **Description**
+
+An asynchronous method used to verify a working connection with the remote configuration repository. If called, this method will establish a connection with the remote repository regardless of whether or not the `local` flag is set to `true`. In both success and failure, this method logs to console if `mute` is set to `false`. 
+
+In addition to logging to the console, method will return a `Boolean` value, allowing user to provide custom handling in the event that establishing a connection is unsuccessful.  
+
+>Please note that this method does not *open* a connection in the form of a stream, but rather hits the endpoint once to ensure that the adapter is able to connect to the appropriate repository with valid credentials. 
+
+#### **Arguments**
+None
+#### **Output**
+`Boolean` (`true` or `false`)
 ### `ServiceAdapter.prototype.fetchConfigFile()`
 
 #### **Description**
@@ -128,13 +161,16 @@ An asynchronous method used to manually retrieve configuration. This method must
 
 This method does not allows for arguments to be passed. If for some reason multiple repositories need to be accessed (i.e. a base configuration and then environmental configurations -- not at all recommended, but a possibility: in general it is best to keep a unified set of configurations per environment), you should use multiple `ServiceAdapter` instances, and handle responses accordingly in your application.
 
+If there is an error fetching the remote configuration, method will return `false` to allow for error custom error handling. If the `mute` flag is set to `false`, a message will be logged to console. If a `pollInterval` is passed, failure will not break the loop. 
+
 #### **Arguments**
 
 None
 
 #### **Output**
 
-Response in JavaScript `Object` format
+Success: Response in JavaScript `Object` format
+Failure: `false`
 
 ### `ServiceAdapter.prototype.printConnection()`
 
@@ -149,6 +185,17 @@ None
 #### **Output**
 
 none
+
+### `ServiceAdapter.prototype.togglePollLoop()`
+#### **Description**
+
+Polling behavior can be toggled on and off by passing `true` or `false` to this method. The default state is `true`. If for whatever reason no polling behavior is desired, this function should be called before [`fetchConfigFile()`](#serviceadapterprototypefetchconfigfile). Method will ignore non-boolean arguments. 
+
+If `mute` is set to `false`, this method will log to the console. 
+#### **Arguments**
+`mode`: `Boolean`
+#### **Output**
+None
 
 ## Events
 
@@ -166,6 +213,9 @@ Listen to this event to respond to configuration changes within your application
 ## Contribute
 
 If you encounter an issues, please open an issue! If you'd like to contribute features or functionality, feel free to submit a pull request. Feature requests also accepted.
+
+The following items will receive priority:
+* Unit Tests (package has been extensively tested via manual testing)
 
 ## Support
 

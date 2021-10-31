@@ -12,7 +12,7 @@ export default class ServiceAdapter {
 	private readonly internalEmitter: EventEmitter;
 
 	private currentConfig: Record<string, unknown>;
-	private loop: boolean;
+	private poll: boolean;
 
 	readonly baseUrl: string;
 	readonly emitter: EventEmitter;
@@ -24,6 +24,7 @@ export default class ServiceAdapter {
 	local: boolean;
 	mute: boolean;
 	pollInterval?: number;
+	timeoutFn: typeof setTimeout;
 	verbose: boolean;
 
 	constructor({
@@ -36,6 +37,7 @@ export default class ServiceAdapter {
 		token = process.env.GIT_SERVICE_ACCESS_TOKEN,
 		username = process.env.GIT_USERNAME,
 		verbose = false,
+		timeoutFn = setTimeout,
 	}: IServiceAdapterInput) {
 		this.baseUrl = 'https://api.github.com';
 		this.currentConfig = {};
@@ -47,12 +49,13 @@ export default class ServiceAdapter {
 		this.mute = mute;
 		this.message = new Message();
 		this.organization = organization;
+		this.poll = true;
 		this.pollInterval = pollInterval;
 		this.repository = repository;
 		this.username = username;
 		this.token = token;
 		this.verbose = verbose;
-		this.loop = false;
+		this.timeoutFn = timeoutFn;
 
 		this.options = {
 			headers: {
@@ -102,17 +105,15 @@ export default class ServiceAdapter {
 				throw new Error('Token did not grant access.');
 		} catch (e) {
 			!this.mute && this.message.establishConnectionFailure({ e });
-			return;
+			return false;
 		}
 
 		!this.mute &&
 			this.message.establishConnectionSuccess({
 				username: `${this.username}`,
 			});
-	}
 
-	startLoop() {
-		this.loop = true;
+		return true;
 	}
 
 	async fetchConfigFile() {
@@ -133,7 +134,8 @@ export default class ServiceAdapter {
 					repository: this.repository,
 					e,
 				});
-			return;
+			this.startPollLoop();
+			return false;
 		}
 
 		return res;
@@ -149,9 +151,10 @@ export default class ServiceAdapter {
 			res = JSON.parse(raw.toString());
 		} catch (e) {
 			!this.mute && this.message.fetchLocalConfigFileFailure({ e });
+			this.startPollLoop();
 			return;
 		}
-		if (this.loop) this.internalEmitter.emit('configReceived', res, this);
+		this.internalEmitter.emit('configReceived', res, this);
 		return Object.freeze({ ...res });
 	}
 
@@ -163,7 +166,7 @@ export default class ServiceAdapter {
 		} catch (e) {
 			throw e;
 		}
-		if (this.loop) this.internalEmitter.emit('configReceived', res, this);
+		this.internalEmitter.emit('configReceived', res, this);
 		return Object.freeze({ ...res });
 	}
 
@@ -176,17 +179,25 @@ export default class ServiceAdapter {
 		const proposed = JSON.stringify(data);
 		if (current !== proposed) {
 			this.currentConfig = { ...data };
+			!this.mute &&
+				this.message.receivedNewConfigSuccessfully({
+					username: this.local ? 'local.json' : `${this.username}`,
+				});
 			if (this.verbose && this.isDev) console.log(data, '\n');
-			if (this.loop)
-				this.emitter.emit('configUpdated', Object.freeze({ ...data }));
+			this.emitter.emit('configUpdated', Object.freeze({ ...data }));
 		}
-		if (this.pollInterval) {
-			this.startPollLoop();
-		}
+		this.startPollLoop();
 	}
 
 	private startPollLoop() {
-		setTimeout(async () => this.fetchConfigFile(), this.pollInterval);
+		if (!this.pollInterval || !this.poll) return;
+		this.timeoutFn(async () => this.fetchConfigFile(), this.pollInterval);
+	}
+
+	togglePollLoop(mode: boolean) {
+		if (typeof mode !== 'boolean') return;
+		this.poll = mode;
+		!this.mute && this.message.pollingBehaviorToggled(mode);
 	}
 
 	printConnection() {

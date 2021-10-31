@@ -8,4 +8,5 @@ export default interface IServiceAdapterInput {
 	mute?: boolean;
 	local?: boolean;
 	verbose?: boolean;
+	timeoutFn?: typeof setTimeout;
 }

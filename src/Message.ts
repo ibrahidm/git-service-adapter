@@ -112,4 +112,22 @@ export default class Message {
 			)}: ${fileName}\n`
 		);
 	}
+
+	receivedNewConfigSuccessfully({ username }: { username: string }) {
+		console.log(
+			`\n\t${chalk.blue('Git Service Adapter')}:\n\t${chalk.black.bgGreen(
+				` Successfully emitted new environment from ${chalk.magenta(
+					username
+				)} `
+			)}\n`
+		);
+	}
+
+	pollingBehaviorToggled(mode: boolean) {
+		console.log(
+			`\n\t${chalk.blue(
+				'Git Service Adapter'
+			)}:\n\tPolling Behavior has been set to: ${chalk.green(`${mode}`)}`
+		);
+	}
 }
