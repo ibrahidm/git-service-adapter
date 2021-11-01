@@ -2,7 +2,7 @@
 
 ## Description <!-- omit in toc -->
 
-**Git Service Adapter** is a configurable plug-and-play module that allows applications to leverage [GitHub](https://github.com/) as a remote configuration storage container. Essentially, **Git Service Adapter** functions as a wrapper around the [GitHub v3 API](https://docs.github.com/en/rest). It is intended as an intermediary tool for applications migrating towards true cloud-based remote configuration. Advantage of remote configuration are discussed elsewhere.
+**Git Service Adapter** is a configurable plug-and-play module that allows applications to leverage [GitHub](https://github.com/) as a remote configuration storage container. Essentially, **Git Service Adapter** functions as a wrapper around the [GitHub v3 API](https://docs.github.com/en/rest). It is intended as an intermediary tool for applications migrating towards true cloud-based remote configuration. Advantages of remote configuration are discussed elsewhere.
 
 ## Table of Contents <!-- omit in toc -->
 
